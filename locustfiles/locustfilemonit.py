@@ -6,7 +6,6 @@ from helpers.bodycreatormonit import BodyCreatorMonit
 failureMessage = "Não foi possível acessar ou visualizar o valor de total"
 load_dotenv()
 
-
 class CargaApiMonitoramentoOnelog(HttpUser):
     host = os.environ["IP_ONELOG_QAS"]
     wait_time = between(1.0, 3.0)
@@ -30,11 +29,13 @@ class CargaApiMonitoramentoOnelog(HttpUser):
 
                 if resposta['total']['viagensProgramadas'] > 0:
                     print(
-                        f"---- SUCESSO NA CONSULTA ----\n Viagens Programadas: {resposta['total']['viagensProgramadas']} \n STATUS CODE: {response.status_code}")
+                        f"---- SUCESSO NA CONSULTA ----\n Viagens Programadas: "
+                        f"{resposta['total']['viagensProgramadas']} \nSTATUS CODE: {response.status_code}")
 
                 else:
                     print(
-                        f"---- FALHA NA CONSULTA ----\n {response.text} \n STATUS CODE: {response.status_code}")
+                        f"---- FALHA NA CONSULTA ----\n {response.text} \n "
+                        f"STATUS CODE: {response.status_code} \n {body}")
                     response.failure(
                         failureMessage + f" Status CODE: {response.status_code}"
                     )
