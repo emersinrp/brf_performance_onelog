@@ -1,49 +1,51 @@
 from locust import between, task, HttpUser, tag
 import os
 from dotenv import load_dotenv
-from helpers.bodycreatormonit import BodyCreatorMonit
+from helpers.bodycreatorrotas import BodyCreatorRotasGet
 
-failureMessage = "Não foi possível acessar ou visualizar o valor de total"
+failureMessage = "Resultado diferente do esperado"
 load_dotenv()
 
 
 class CargaApiMonitoramentoOnelog(HttpUser):
     host = os.environ["IP_ONELOG_QAS"]
     wait_time = between(1.0, 3.0)
-    prefix_monitoramento = os.environ["PREFIX_MONITORAMENTO_RESUMO"]
+    prefix_post_anomaly = os.environ["PREFIX_ROTAS"]
 
     # token_apim_prd = os.environ["TOKEN_APIM_PRD"]
 
     @tag('test1')
     @task
-    def retorno_monitoramento_filtro_data(self):
-        consult_onelog_endpoint = f"{self.prefix_monitoramento}"
-        body = BodyCreatorMonit.create_default_monit_body()
+    def create_generic_anomaly(self):
+        consult_onelog_endpoint = f"{self.prefix_post_anomaly}"
+        body = BodyCreatorRotasGet.create_default_body_rotas()
 
         # Subscription key APIM-PRD:
         # self.client.headers['Ocp-Apim-Subscription-Key'] = f'{self.token_apim_prd}'
         with self.client.post(url=consult_onelog_endpoint,
-                              name="CargaApiOnelog - Retorna monitoramento c/ filtro data",
+                              name="CargaApiOnelogRotas - Retorna rotas criadas por placa",
                               catch_response=True, json=body) as response:
+            print(body)
 
             if response.status_code == 200:
                 resposta = response.json()
+                print(resposta)
 
-                if resposta['total']['viagensProgramadas'] > 0:
+                if resposta['currentPage'] > 0:
                     print(
-                        f"---- SUCESSO NA CONSULTA ----\n Viagens Programadas: "
-                        f"{resposta['total']['viagensProgramadas']} \nSTATUS CODE: {response.status_code}")
+                        f"---- SUCESSO NA BUSCA ----\n Rotas: "
+                        f"{resposta['totalRegisters']} \nSTATUS CODE: {response.status_code}")
 
                 else:
                     print(
-                        f"---- FALHA NA CONSULTA ----\n {response.text} \n "
+                        f"---- FALHA NA BUSCA ----\n {response.text} \n "
                         f"STATUS CODE: {response.status_code} \n {body}")
                     response.failure(
                         failureMessage + f" Status CODE: {response.status_code}"
                     )
             else:
                 print(
-                    f"---- FALHA NA CONSULTA ----\n {response.text} \n STATUS CODE: {response.status_code}")
+                    f"---- FALHA NO GET ----\n {response.text} \n STATUS CODE: {response.status_code}")
                 response.failure(
                     failureMessage + f" Status CODE: {response.status_code}"
                 )
